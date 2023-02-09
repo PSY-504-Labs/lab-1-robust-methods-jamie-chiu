@@ -1,6 +1,7 @@
 ---
 title: "Robust Methods Lab"
 format: html
+    code-fold: true
 editor: visual
 execute: 
   message: false
@@ -12,7 +13,7 @@ execute:
 
 -   If you are fitting a model, display the model output in a neatly formatted table. (The `gt` `tidy` and `kable` functions can help!)
 
--   If you are creating a plot, use `ggplot` or `base`and make sure they are publication ready. That means there are clear labels for all axes, titles, etc.
+-   If you are creating a plot, use `ggplot` or `base` and make sure they are publication ready. That means there are clear labels for all axes, titles, etc.
 
 -   Commit and push your work to GitHub regularly, at least after each exercise. Write short and informative commit messages.
 
@@ -20,11 +21,12 @@ execute:
 
     ```{r}
     #| message: false
-    #| 
+
     library(tidyverse)
     library(robustbase) # star data
     library(boot) # bootstrapping
     library(correlation) # get different correlations
+    library(datawizard) # for winsorising function
     library(permuco) # run permutation tests
     library(parameters) # SE
     library(data.table) # fread 
@@ -36,25 +38,95 @@ execute:
 
 ## Robust Correlations
 
-Use the `stars` data in `robustbase`. This data looks at the relationship between temperature at the surface of a star and the light intensity.
-
-1.  
+1.  Use the `stars` data in `robustbase`. This data looks at the relationship between temperature at the surface of a star and the light intensity.
 
     ```{r}
-    stars<-robustbase::starsCYG
+    # load in data
+    stars <- robustbase::starsCYG
+
     ```
 
     a\. Plot the data and describe the pattern seen. What is Pearson's *r*?
 
+    ```{r}
+    #| echo: false
+    # plot `stars` data
+    stars %>% 
+      ggplot(aes(log.Te, log.light)) +
+      geom_point() +
+      theme_classic() +
+      labs(title = "Figure 1. Relationship between temperature and light intensity of a star",
+           x = "Temperature",
+           y = "Light Intensity")
+      
+      
+    ```
+
+    ```{r}
+    # Pearson's r using easystats package
+    correlation::correlation(stars)
+    ```
+
     b\. Re-run the correlation, but this time use the winsorized r (20%). Do this manually and then with the correlation::correlation function from `easystats`.
 
+    ```{r}
+    # winsorize `stars` dataset
+    winsorized_stars <- datawizard::winsorize(stars,
+              threshold = 0.2,
+              method = "percentile",
+              robus = FALSE,
+              verbose = TRUE)
+
+    # rerun correlations
+    # manually
+    correlation(winsorized_stars)
+    # with easystats::correlation
+    correlation(stars, winsorize = 0.2)
+    ```
+
     c\. Compare the correlations.
+
+    > Answer: The correlations between light intensity and temperature became significant after winsorising the `stars` dataset. (Winsorising and then running the correlation resulted in the same outputs as running the correlation with a winsorising argument.)
 
 ## Bootstrapping and Permutations
 
 2.  For the following data: \[8.453532, 10.025041, 11.495339, 9.367600, 8.333229, 9.788753, 10.883344, 10.543059, 9.869095, 10.799819\]
 
     a\. Bootstrap the mean (using the `boot` package) and plot the histogram with `ggplot2`
+
+    ```{r}
+    # create list
+    my_list <- as.numeric(list(8.453532, 10.025041, 11.495339, 9.367600, 8.333229, 9.788753, 10.883344, 10.543059, 9.869095, 10.799819))
+
+    # set seed
+    set.seed(8)
+
+    # using `simpleboot` package
+    bootstrap_my_list <- one.boot(my_list,mean, R=1000)
+    hist(bootstrap_my_list)
+
+    # using `boot` package
+    # define the function that will be used to calculate the mean
+    mean_func = function(data, indices) {
+      return(mean(data[indices])) #indices to do bootstrapping
+    }
+    # use boot to bootstrap means 1000 times (R)
+    #input is df, function for mean, and # of boot samples
+    boot_my_list <- boot(my_list, mean_func, R=1000)
+    # get means
+    boot_means <- boot_my_list$t
+
+    # plot histogram with ggplot
+    ggplot(as.data.frame(boot_means), aes(x = V1)) + 
+      geom_histogram(binwidth = 0.1, 
+                     color = "black", 
+                     fill = "#1E88E5", # color-blind friendly
+                     alpha = 0.9) +
+      labs(title="Fig.2: Distribution of bootstrapped means",
+           y="Frequency",
+           x="Bootstrap Sample Means") +
+      theme_classic() 
+    ```
 
     b\. Bootstrap the median (using the `boot` package) and plot the histogram with `ggplot2`
 
