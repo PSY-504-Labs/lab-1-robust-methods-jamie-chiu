@@ -1,7 +1,7 @@
 ---
 title: "Robust Methods Lab"
 format: html
-    code-fold: true
+code-fold: true
 editor: visual
 execute: 
   message: false
@@ -415,8 +415,7 @@ b\. Interpret the results
 
 > Answer:
 >
-> A linear model was fitted to predict exam scores with hours studied using a sample of 20 students. The model was not statistically significant. From the data set, the effect of hours studied was not predictive of exam scores (beta = 1.95, 95% CI \[-0.31, 4.20\], t(18) = 1.81, p =
-> 0.087; Std. beta = 0.39, 95% CI \[-0.06, 0.85\]).
+> A linear model was fitted to predict exam scores with hours studied using a sample of 20 students. The model was not statistically significant. From the data set, the effect of hours studied was not predictive of exam scores (beta = 1.95, 95% CI \[-0.31, 4.20\], t(18) = 1.81, p = 0.087; Std. beta = 0.39, 95% CI \[-0.06, 0.85\]).
 
 c\. Check assumptions and report which ones failed (include plots)
 
